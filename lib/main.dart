@@ -1,14 +1,17 @@
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const LoveTimeApp());
 }
 
-const red = Color(0xFFE50932);
-const gold = Color(0xFFFFC928);
-const bg = Color(0xFF101010);
-const card = Color(0xFF1D1D1D);
+const Color backgroundColor = Color(0xFF171216);
+const Color cardColor = Color(0xFF261B22);
+const Color burgundy = Color(0xFF713B50);
+const Color softPink = Color(0xFFD9A6B8);
+const Color cream = Color(0xFFF3E7EB);
+const Color mutedText = Color(0xFFBDAEB5);
 
 class LoveTimeApp extends StatelessWidget {
   const LoveTimeApp({super.key});
@@ -20,142 +23,308 @@ class LoveTimeApp extends StatelessWidget {
       title: 'LoveTime Podcast',
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: bg,
-        colorScheme: ColorScheme.dark(
-          primary: red,
-          secondary: gold,
+        scaffoldBackgroundColor: backgroundColor,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: burgundy,
+          brightness: Brightness.dark,
+          surface: backgroundColor,
         ),
+        fontFamily: 'Roboto',
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const MainScreen(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class Episode {
+  final String title;
+  final String description;
+  final String category;
+  final IconData icon;
 
-  @override
-  State<HomePage> createState() => _HomePageState();
+  const Episode({
+    required this.title,
+    required this.description,
+    required this.category,
+    required this.icon,
+  });
 }
 
-class _HomePageState extends State<HomePage> {
-  int selectedTab = 0;
-  String category = 'Vyote';
-  final search = TextEditingController();
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
 
-  final episodes = [
-    ['NILICHEPUKA KWENYE NDOA', 'Mahusiano', 'Dakika 45'],
-    ['JE, NDOA YA PILI NI SULUHISHO?', 'Ndoa', 'Dakika 38'],
-    ['SIRI ZA MAHUSIANO YENYE FURAHA', 'Maisha', 'Dakika 52'],
-    ['MAPENZI, PESA NA FAMILIA', 'Familia', 'Dakika 41'],
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int selectedTab = 0;
+  String language = 'sw';
+  String category = 'Vyote';
+  final TextEditingController searchController = TextEditingController();
+  final Set<String> favorites = {};
+
+  final List<Episode> episodes = const [
+    Episode(
+      title: 'Siri za Mahusiano',
+      description: 'Mazungumzo kuhusu mapenzi na maisha ya pamoja.',
+      category: 'Mahusiano',
+      icon: Icons.favorite_rounded,
+    ),
+    Episode(
+      title: 'Maisha ya Ndoa',
+      description: 'Kujenga ndoa yenye upendo, heshima na amani.',
+      category: 'Ndoa',
+      icon: Icons.volunteer_activism_rounded,
+    ),
+    Episode(
+      title: 'Familia na Malezi',
+      description: 'Mawazo kuhusu familia na malezi ya watoto.',
+      category: 'Familia',
+      icon: Icons.family_restroom_rounded,
+    ),
+    Episode(
+      title: 'Hadithi za Maisha',
+      description: 'Simulizi, uzoefu na mafunzo kutoka kwa watu.',
+      category: 'Maisha',
+      icon: Icons.auto_stories_rounded,
+    ),
   ];
+
+  final Map<String, Map<String, String>> translations = {
+    'sw': {
+      'home': 'Nyumbani',
+      'episodes': 'Vipindi',
+      'youtube': 'YouTube',
+      'favorites': 'Vipendwa',
+      'profile': 'Wasifu',
+      'welcome': 'Karibu LoveTime Podcast',
+      'subtitle': 'Mahusiano • Ndoa • Familia • Maisha',
+      'featured': 'Vipindi vya kuangazia',
+      'all': 'Vyote',
+      'relationships': 'Mahusiano',
+      'marriage': 'Ndoa',
+      'family': 'Familia',
+      'life': 'Maisha',
+      'search': 'Tafuta kipindi...',
+      'openYoutube': 'Tembelea YouTube Channel',
+      'youtubeTitle': 'LoveTime kwenye YouTube',
+      'youtubeDescription':
+          'Tazama mazungumzo, mijadala na simulizi kuhusu mahusiano na maisha.',
+      'favoritesTitle': 'Vipindi unavyovipenda',
+      'emptyFavorites': 'Bado hujaongeza kipindi kwenye vipendwa.',
+      'profileTitle': 'Wasifu wako',
+      'language': 'Chagua lugha',
+      'noResults': 'Hakuna kipindi kilichopatikana.',
+    },
+    'en': {
+      'home': 'Home',
+      'episodes': 'Episodes',
+      'youtube': 'YouTube',
+      'favorites': 'Favorites',
+      'profile': 'Profile',
+      'welcome': 'Welcome to LoveTime Podcast',
+      'subtitle': 'Relationships • Marriage • Family • Life',
+      'featured': 'Featured episodes',
+      'all': 'All',
+      'relationships': 'Relationships',
+      'marriage': 'Marriage',
+      'family': 'Family',
+      'life': 'Life',
+      'search': 'Search episodes...',
+      'openYoutube': 'Visit YouTube Channel',
+      'youtubeTitle': 'LoveTime on YouTube',
+      'youtubeDescription':
+          'Watch conversations, debates and stories about relationships and life.',
+      'favoritesTitle': 'Your favorite episodes',
+      'emptyFavorites': 'You have not added any favorites yet.',
+      'profileTitle': 'Your profile',
+      'language': 'Choose language',
+      'noResults': 'No episodes found.',
+    },
+    'fr': {
+      'home': 'Accueil',
+      'episodes': 'Épisodes',
+      'youtube': 'YouTube',
+      'favorites': 'Favoris',
+      'profile': 'Profil',
+      'welcome': 'Bienvenue sur LoveTime Podcast',
+      'subtitle': 'Relations • Mariage • Famille • Vie',
+      'featured': 'Épisodes à découvrir',
+      'all': 'Tout',
+      'relationships': 'Relations',
+      'marriage': 'Mariage',
+      'family': 'Famille',
+      'life': 'Vie',
+      'search': 'Rechercher un épisode...',
+      'openYoutube': 'Visiter la chaîne YouTube',
+      'youtubeTitle': 'LoveTime sur YouTube',
+      'youtubeDescription':
+          'Découvrez des conversations et des histoires sur les relations et la vie.',
+      'favoritesTitle': 'Vos épisodes favoris',
+      'emptyFavorites': 'Vous n’avez pas encore ajouté de favoris.',
+      'profileTitle': 'Votre profil',
+      'language': 'Choisir la langue',
+      'noResults': 'Aucun épisode trouvé.',
+    },
+  };
+
+  String tr(String key) => translations[language]![key] ?? key;
+
+  String translatedCategory(String value) {
+    switch (value) {
+      case 'Vyote':
+        return tr('all');
+      case 'Mahusiano':
+        return tr('relationships');
+      case 'Ndoa':
+        return tr('marriage');
+      case 'Familia':
+        return tr('family');
+      case 'Maisha':
+        return tr('life');
+      default:
+        return value;
+    }
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> openYoutube() async {
+    final uri = Uri.parse('https://www.youtube.com/@LOVETIMEPODCAST');
+    final opened = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Imeshindikana kufungua YouTube.')),
+      );
+    }
+  }
+
+  void changeLanguage(String? value) {
+    if (value != null) {
+      setState(() => language = value);
+    }
+  }
+
+  List<Episode> get filteredEpisodes {
+    final query = searchController.text.toLowerCase();
+
+    return episodes.where((episode) {
+      final matchesCategory =
+          category == 'Vyote' || episode.category == category;
+      final matchesSearch = episode.title.toLowerCase().contains(query) ||
+          episode.description.toLowerCase().contains(query);
+
+      return matchesCategory && matchesSearch;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      homePage(),
+      episodesPage(),
+      youtubePage(),
+      favoritesPage(),
+      profilePage(),
+    ];
+
     return Scaffold(
-      body: SafeArea(
-        child: selectedTab == 0 ? home() : otherPage(),
-      ),
+      body: SafeArea(child: pages[selectedTab]),
       bottomNavigationBar: NavigationBar(
-        backgroundColor: card,
-        indicatorColor: red.withValues(alpha: 0.25),
+        height: 70,
+        backgroundColor: const Color(0xFF211820),
+        indicatorColor: burgundy.withValues(alpha: 0.55),
         selectedIndex: selectedTab,
-        onDestinationSelected: (value) {
-          setState(() => selectedTab = value);
+        onDestinationSelected: (index) {
+          setState(() => selectedTab = index);
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Nyumbani',
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home_rounded, color: cream),
+            label: tr('home'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.play_circle_outline),
-            label: 'Vipindi',
+            icon: const Icon(Icons.play_circle_outline),
+            selectedIcon: const Icon(Icons.play_circle_fill),
+            label: tr('episodes'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.favorite_outline),
-            label: 'Vipendwa',
+            icon: const Icon(Icons.smart_display_outlined),
+            selectedIcon: const Icon(Icons.smart_display),
+            label: tr('youtube'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            label: 'Wasifu',
+            icon: const Icon(Icons.favorite_border),
+            selectedIcon: const Icon(Icons.favorite),
+            label: tr('favorites'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: tr('profile'),
           ),
         ],
       ),
     );
   }
 
-  Widget home() {
-    final filtered = episodes.where((e) {
-      final matchesSearch =
-          e[0].toLowerCase().contains(search.text.toLowerCase());
-      final matchesCategory =
-          category == 'Vyote' || e[1] == category;
-      return matchesSearch && matchesCategory;
-    }).toList();
+  Widget pageHeader(String title, {String? subtitle}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: cream,
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 6),
+          Text(subtitle, style: const TextStyle(color: mutedText)),
+        ],
+      ],
+    );
+  }
 
+  Widget homePage() {
     return ListView(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
-                color: red,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.favorite, color: Colors.white),
-            ),
-            const SizedBox(width: 10),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('LOVE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 23,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                    )),
-                  Text('TIME PODCAST',
-                    style: TextStyle(
-                      color: gold,
-                      fontSize: 11,
-                      letterSpacing: 3,
-                      fontWeight: FontWeight.bold,
-                    )),
-                ],
+            const Text(
+              'LoveTime',
+              style: TextStyle(
+                color: softPink,
+                fontSize: 27,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
               ),
             ),
-            const Icon(Icons.notifications_none, size: 27),
+            languageSelector(),
           ],
         ),
-        const SizedBox(height: 28),
-        const Text('KARIBU LOVE TIME ❤️',
-          style: TextStyle(
-            color: gold,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
-          )),
-        const SizedBox(height: 8),
-        const Text('Mahusiano, maisha\nna burudani.',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
-            height: 1.15,
-          )),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             gradient: const LinearGradient(
-              colors: [Color(0xFF8F001F), Color(0xFF25000B)],
+              colors: [Color(0xFF633449), Color(0xFF30202A)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -163,157 +332,311 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('KIPINDI MAALUM',
-                style: TextStyle(
-                  color: gold,
+              const Icon(Icons.favorite_rounded, color: softPink, size: 30),
+              const SizedBox(height: 18),
+              Text(
+                tr('welcome'),
+                style: const TextStyle(
+                  color: cream,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                )),
-              const SizedBox(height: 12),
-              const Text('MAZUNGUMZO\nYANAYOBADILI MAISHA',
-                style: TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
-                )),
-              const SizedBox(height: 15),
-              ElevatedButton.icon(
-                onPressed: () => setState(() => selectedTab = 1),
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('GUNDUA VIPINDI'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: gold,
-                  foregroundColor: Colors.black,
                 ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                tr('subtitle'),
+                style: const TextStyle(color: Color(0xFFE7CBD5)),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 25),
+        const SizedBox(height: 28),
+        pageHeader(tr('featured')),
+        const SizedBox(height: 15),
+        ...episodes.take(3).map(episodeCard),
+        const SizedBox(height: 15),
+        youtubeBanner(),
+      ],
+    );
+  }
+
+  Widget episodesPage() {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        pageHeader(tr('episodes')),
+        const SizedBox(height: 18),
         TextField(
-          controller: search,
+          controller: searchController,
           onChanged: (_) => setState(() {}),
+          style: const TextStyle(color: cream),
           decoration: InputDecoration(
-            hintText: 'Tafuta kipindi...',
-            prefixIcon: const Icon(Icons.search),
+            hintText: tr('search'),
+            hintStyle: const TextStyle(color: mutedText),
+            prefixIcon: const Icon(Icons.search, color: softPink),
             filled: true,
-            fillColor: card,
+            fillColor: cardColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
               borderSide: BorderSide.none,
             ),
           ),
         ),
-        const SizedBox(height: 23),
-        const Text('CHAGUA KATEGORIA',
-          style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: ['Vyote', 'Mahusiano', 'Ndoa', 'Maisha', 'Familia']
-                .map((item) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(item),
-                    selected: category == item,
-                    selectedColor: red,
-                    onSelected: (_) => setState(() => category = item),
-                  ),
-                )).toList(),
+        const SizedBox(height: 15),
+        Wrap(
+          spacing: 8,
+          children: ['Vyote', 'Mahusiano', 'Ndoa', 'Familia', 'Maisha']
+              .map(
+                (item) => ChoiceChip(
+                  label: Text(translatedCategory(item)),
+                  selected: category == item,
+                  selectedColor: burgundy,
+                  backgroundColor: cardColor,
+                  labelStyle: const TextStyle(color: cream),
+                  onSelected: (_) => setState(() => category = item),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 15),
+        if (filteredEpisodes.isEmpty)
+          Text(tr('noResults'), style: const TextStyle(color: mutedText))
+        else
+          ...filteredEpisodes.map(episodeCard),
+      ],
+    );
+  }
+  Widget episodeCard(Episode episode) {
+  final isFavorite = favorites.contains(episode.title);
+
+  return Container(
+    margin: const EdgeInsets.only(bottom: 13),
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(17),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.04),
+      ),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: burgundy.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(episode.icon, color: softPink, size: 27),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                episode.title,
+                style: const TextStyle(
+                  color: cream,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                episode.description,
+                style: const TextStyle(
+                  color: mutedText,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 24),
-        const Text('VIPINDI VYA KARIBUNI',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-          )),
-        const SizedBox(height: 12),
-        ...filtered.map((e) => episodeCard(e)),
-        const SizedBox(height: 25),
-        const Center(
-          child: Text('LOVE TIME PODCAST • MAHUSIANO NA MAISHA',
-            style: TextStyle(color: Colors.white38, fontSize: 10)),
+        IconButton(
+          tooltip: 'Favorite',
+          onPressed: () {
+            setState(() {
+              if (isFavorite) {
+                favorites.remove(episode.title);
+              } else {
+                favorites.add(episode.title);
+              }
+            });
+          },
+          icon: Icon(
+            isFavorite ? Icons.favorite : Icons.favorite_border,
+            color: softPink,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+
+  Widget youtubeBanner() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.smart_display, color: softPink, size: 32),
+          const SizedBox(height: 10),
+          Text(
+            tr('youtubeTitle'),
+            style: const TextStyle(
+              color: cream,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            tr('youtubeDescription'),
+            style: const TextStyle(color: mutedText),
+          ),
+          const SizedBox(height: 15),
+          FilledButton.icon(
+            onPressed: openYoutube,
+            style: FilledButton.styleFrom(
+              backgroundColor: burgundy,
+              foregroundColor: cream,
+            ),
+            icon: const Icon(Icons.play_arrow),
+            label: Text(tr('openYoutube')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget youtubePage() {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        pageHeader(tr('youtubeTitle')),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(25),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.play_circle_fill,
+                color: softPink,
+                size: 75,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                tr('youtubeDescription'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: mutedText, fontSize: 15),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: openYoutube,
+                style: FilledButton.styleFrom(
+                  backgroundColor: burgundy,
+                  foregroundColor: cream,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                ),
+                icon: const Icon(Icons.open_in_new),
+                label: Text(tr('openYoutube')),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget episodeCard(List<String> episode) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 13),
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(17),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: red.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: const Icon(Icons.mic, color: gold, size: 35),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(episode[1],
-                  style: const TextStyle(color: gold, fontSize: 11)),
-                const SizedBox(height: 5),
-                Text(episode[0],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  )),
-                const SizedBox(height: 5),
-                Text(episode[2],
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 11,
-                  )),
-              ],
-            ),
-          ),
-          const Icon(Icons.play_circle_fill, color: red, size: 34),
-        ],
-      ),
+  Widget favoritesPage() {
+    final favoriteEpisodes = episodes
+        .where((episode) => favorites.contains(episode.title))
+        .toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        pageHeader(tr('favoritesTitle')),
+        const SizedBox(height: 18),
+        if (favoriteEpisodes.isEmpty)
+          Text(
+            tr('emptyFavorites'),
+            style: const TextStyle(color: mutedText),
+          )
+        else
+          ...favoriteEpisodes.map(episodeCard),
+      ],
     );
   }
 
-  Widget otherPage() {
-    final titles = ['Nyumbani', 'Vipindi vyote', 'Vipendwa vyangu', 'Wasifu'];
-    final icons = [
-      Icons.home,
-      Icons.play_circle,
-      Icons.favorite,
-      Icons.person,
-    ];
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icons[selectedTab], color: red, size: 65),
-          const SizedBox(height: 15),
-          Text(titles[selectedTab],
-            style: const TextStyle(
-              fontSize: 24,
+  Widget profilePage() {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        pageHeader(tr('profileTitle')),
+        const SizedBox(height: 25),
+        const CircleAvatar(
+          radius: 42,
+          backgroundColor: burgundy,
+          child: Icon(Icons.person, color: cream, size: 45),
+        ),
+        const SizedBox(height: 15),
+        const Center(
+          child: Text(
+            'LoveTime Podcast',
+            style: TextStyle(
+              color: cream,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-            )),
-          const SizedBox(height: 8),
-          const Text('LoveTime Podcast',
-            style: TextStyle(color: gold)),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => setState(() => selectedTab = 0),
-            child: const Text('RUDI NYUMBANI'),
+            ),
           ),
-        ],
+        ),
+        const SizedBox(height: 30),
+        Text(
+          tr('language'),
+          style: const TextStyle(color: cream, fontSize: 16),
+        ),
+        const SizedBox(height: 10),
+        languageSelector(expanded: true),
+      ],
+    );
+  }
+
+  Widget languageSelector({bool expanded = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: language,
+          dropdownColor: cardColor,
+          isExpanded: expanded,
+          iconEnabledColor: softPink,
+          style: const TextStyle(color: cream),
+          items: const [
+            DropdownMenuItem(value: 'sw', child: Text('🇹🇿 Kiswahili')),
+            DropdownMenuItem(value: 'en', child: Text('🇬🇧 English')),
+            DropdownMenuItem(value: 'fr', child: Text('🇫🇷 Français')),
+          ],
+          onChanged: changeLanguage,
+        ),
       ),
     );
   }
