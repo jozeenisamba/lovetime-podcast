@@ -6,15 +6,19 @@ class YoutubeVideo {
   final String title;
   final String thumbnail;
   final String published;
+  final String description;
 
   const YoutubeVideo({
     required this.id,
     required this.title,
     required this.thumbnail,
     required this.published,
+    this.description = '',
   });
 
   String get url => 'https://www.youtube.com/watch?v=$id';
+  String get embedUrl =>
+      'https://www.youtube.com/embed/$id?autoplay=1&playsinline=1';
 }
 
 class YoutubeService {
@@ -61,12 +65,14 @@ class YoutubeService {
       final thumbnail = findElement(entry, 'thumbnail')
               ?.getAttribute('url') ??
           'https://img.youtube.com/vi/$id/hqdefault.jpg';
+      final description = findElement(entry, 'description')?.innerText ?? '';
 
       return YoutubeVideo(
         id: id,
         title: title,
         thumbnail: thumbnail,
         published: published,
+        description: description.trim(),
       );
     }).toList();
   }
