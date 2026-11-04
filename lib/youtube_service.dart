@@ -18,7 +18,7 @@ class YoutubeVideo {
 
   String get url => 'https://www.youtube.com/watch?v=$id';
   String get embedUrl =>
-      'https://www.youtube.com/embed/$id?autoplay=1&playsinline=1';
+      'https://www.youtube.com/embed/$id?autoplay=1&playsinline=1&enablejsapi=1&origin=https://lovetimepodcast.netlify.app&widget_referrer=https://lovetimepodcast.netlify.app';
 }
 
 class YoutubeService {

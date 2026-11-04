@@ -2079,6 +2079,7 @@ class _MediaPlayerScreenState extends State<MediaPlayerScreen> {
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFF0C0714))
+      ..setUserAgent('Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36')
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (progress) {},
@@ -2088,7 +2089,13 @@ class _MediaPlayerScreenState extends State<MediaPlayerScreen> {
           onNavigationRequest: (request) => NavigationDecision.navigate,
         ),
       )
-      ..loadRequest(Uri.parse(widget.url));
+      ..loadRequest(
+        Uri.parse(widget.url),
+        headers: const {
+          'Referer': 'https://lovetimepodcast.netlify.app/',
+          'Origin': 'https://lovetimepodcast.netlify.app',
+        },
+      );
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -2103,6 +2110,21 @@ class _MediaPlayerScreenState extends State<MediaPlayerScreen> {
             ),
           ],
         ),
+        actions: widget.url.contains('/embed/')
+            ? [
+                IconButton(
+                  tooltip: 'Watch on YouTube',
+                  onPressed: () async {
+                    final videoId = Uri.parse(widget.url).pathSegments.last;
+                    await launchUrl(
+                      Uri.parse('https://www.youtube.com/watch?v=$videoId'),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  icon: const Icon(Icons.open_in_new, color: cream),
+                ),
+              ]
+            : null,
         backgroundColor: backgroundColor,
         foregroundColor: cream,
         iconTheme: const IconThemeData(color: cream),
