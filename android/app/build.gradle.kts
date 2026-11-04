@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.lovetime_podcast"
+    namespace = "com.lovetimepodcast.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,8 +15,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.lovetime_podcast"
+        applicationId = "com.lovetimepodcast.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -29,11 +28,23 @@ android {
         versionName = flutter.versionName
     }
 
+    val uploadKeystorePath = System.getenv("CM_KEYSTORE_PATH")
+    val uploadKeystorePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+    val uploadKeyAlias = System.getenv("CM_KEY_ALIAS")
+    val uploadKeyPassword = System.getenv("CM_KEY_PASSWORD")
+
+    if (!uploadKeystorePath.isNullOrBlank()) {
+        signingConfigs.create("release") {
+            storeFile = file(uploadKeystorePath)
+            storePassword = uploadKeystorePassword
+            keyAlias = uploadKeyAlias
+            keyPassword = uploadKeyPassword
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 }
