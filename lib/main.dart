@@ -165,6 +165,17 @@ class _MainScreenState extends State<MainScreen> {
   bool loadingYoutube = true;
   String? youtubeError;
 
+  final List<String> tiktokVideoIds = const [
+    '7619696402595155220',
+    '7628675479721102612',
+    '7700626793170062612',
+    '7698325414611094802',
+    '7702045512693861638',
+    '7680320107557555464',
+    '7606332298413427988',
+    '7536532535208070456',
+  ];
+
   final List<TrendingAudioClip> popularAudioClips = const [
     TrendingAudioClip(
       title: 'Mkasa wa Upendo wa kweli',
@@ -1167,8 +1178,66 @@ ${contactMessageController.text.trim()}
             Text(tr('noVideos'), style: const TextStyle(color: muted))
           else
             ...youtubeVideos.map(videoCard),
+          const SizedBox(height: 28),
+          tiktokVideosSection(),
         ],
       ),
+    );
+  }
+
+  Widget tiktokVideosSection() {
+    final headingTitle = language == 'fr'
+        ? 'TikTok récents'
+        : language == 'en'
+            ? 'Recent TikTok videos'
+            : 'Video za TikTok za hivi karibuni';
+    final headingSubtitle = language == 'fr'
+        ? 'Les 8 dernières vidéos fournies de LoveTime Podcast.'
+        : language == 'en'
+            ? 'The 8 supplied videos from LoveTime Podcast.'
+            : 'Video 8 zilizotolewa kutoka LoveTime Podcast.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        sectionTitle(headingTitle, subtitle: headingSubtitle),
+        ...tiktokVideoIds.asMap().entries.map((entry) {
+          final index = entry.key + 1;
+          final videoId = entry.value;
+          final title = language == 'fr'
+              ? 'LoveTime Podcast • TikTok $index'
+              : language == 'en'
+                  ? 'LoveTime Podcast • TikTok $index'
+                  : 'LoveTime Podcast • TikTok $index';
+          return Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: rose.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.music_note, color: rose, size: 28),
+              ),
+              title: Text(title, style: const TextStyle(color: cream, fontWeight: FontWeight.w700)),
+              subtitle: Text(videoId, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: muted, fontSize: 11)),
+              trailing: const Icon(Icons.play_circle_fill, color: rose, size: 34),
+              onTap: () => openInAppMedia(
+                title,
+                'https://www.tiktok.com/player/v1/$videoId?autoplay=1&controls=1',
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 
@@ -2110,16 +2179,24 @@ class _MediaPlayerScreenState extends State<MediaPlayerScreen> {
             ),
           ],
         ),
-        actions: widget.url.contains('/embed/')
+        actions: widget.url.contains('/embed/') || widget.url.contains('/player/v1/')
             ? [
                 IconButton(
-                  tooltip: 'Watch on YouTube',
+                  tooltip: widget.url.contains('tiktok.com') ? 'Open in TikTok' : 'Watch on YouTube',
                   onPressed: () async {
-                    final videoId = Uri.parse(widget.url).pathSegments.last;
-                    await launchUrl(
-                      Uri.parse('https://www.youtube.com/watch?v=$videoId'),
-                      mode: LaunchMode.externalApplication,
-                    );
+                    if (widget.url.contains('tiktok.com')) {
+                      final videoId = Uri.parse(widget.url).pathSegments.last;
+                      await launchUrl(
+                        Uri.parse('https://www.tiktok.com/@lovetime_podcast/video/$videoId'),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } else {
+                      final videoId = Uri.parse(widget.url).pathSegments.last;
+                      await launchUrl(
+                        Uri.parse('https://www.youtube.com/watch?v=$videoId'),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    }
                   },
                   icon: const Icon(Icons.open_in_new, color: cream),
                 ),
