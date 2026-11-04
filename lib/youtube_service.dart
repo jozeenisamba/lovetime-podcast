@@ -20,6 +20,15 @@ class YoutubeVideo {
 class YoutubeService {
   static const String channelId = 'UCADV2hay2J0SThrc-vlqRIg';
 
+  static XmlElement? findElement(XmlElement parent, String localName) {
+    for (final element in parent.descendants.whereType<XmlElement>()) {
+      if (element.name.local == localName) {
+        return element;
+      }
+    }
+    return null;
+  }
+
   static Future<List<YoutubeVideo>> fetchVideos() async {
     final uri = Uri.parse(
       'https://www.youtube.com/feeds/videos.xml?channel_id=$channelId',
@@ -35,22 +44,22 @@ class YoutubeService {
     }
 
     final document = XmlDocument.parse(response.body);
-    final entries = document.findAllElements('entry');
+
+    final entries = document.descendants
+        .whereType<XmlElement>()
+        .where((element) => element.name.local == 'entry');
 
     return entries.map((entry) {
-      final id = entry
-          .findElements('videoId', namespaceUri: null)
-          .first
-          .innerText;
+      final id = findElement(entry, 'videoId')?.innerText;
+      final title = findElement(entry, 'title')?.innerText;
+      final published = findElement(entry, 'published')?.innerText;
 
-      final title = entry.findElements('title').first.innerText;
+      if (id == null || title == null || published == null) {
+        throw Exception('Taarifa za video hazijakamilika');
+      }
 
-      final published = entry.findElements('published').first.innerText;
-
-      final thumbnail = entry
-          .findElements('thumbnail', namespaceUri: null)
-          .first
-          .getAttribute('url') ??
+      final thumbnail = findElement(entry, 'thumbnail')
+              ?.getAttribute('url') ??
           'https://img.youtube.com/vi/$id/hqdefault.jpg';
 
       return YoutubeVideo(
