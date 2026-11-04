@@ -1,4 +1,5 @@
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -164,6 +165,27 @@ class _MainScreenState extends State<MainScreen> {
   List<YoutubeVideo> youtubeVideos = [];
   bool loadingYoutube = true;
   String? youtubeError;
+
+  static const String websitePodcastAudioUrl =
+      'https://lovetimepodcast.netlify.app/audio/lovetime-zipo-tofauti.mp3';
+
+  final List<Map<String, String>> websiteVideoEpisodes = const [
+    {
+      'id': 'jdSrocovjk4',
+      'title': 'Alikaa Miezi Mitatu Bila Kuomba Chochote, Sababu Halisi Ni Hii',
+      'category': 'Mahusiano',
+    },
+    {
+      'id': 'klWyND-ZfvA',
+      'title': 'Sababu za Maumivu na Harufu: Namna ya Kuongea na Mpenzi Wako',
+      'category': 'Afya & Mapenzi',
+    },
+    {
+      'id': 'hArGeP17qjw',
+      'title': 'Wengi Hawajui Hii Sehemu Yenye Raha Ukitalii Mlima',
+      'category': 'Mahaba & Ukaribu',
+    },
+  ];
 
   final List<String> tiktokVideoIds = const [
     '7619696402595155220',
@@ -1011,6 +1033,8 @@ ${contactMessageController.text.trim()}
           child: Text(tr('listen')),
         ),
         const SizedBox(height: 25),
+        websitePodcastAudioSection(),
+        const SizedBox(height: 25),
         audioHighlightsSection(),
         const SizedBox(height: 25),
         youtubeArticlesSection(),
@@ -1179,9 +1203,117 @@ ${contactMessageController.text.trim()}
           else
             ...youtubeVideos.map(videoCard),
           const SizedBox(height: 28),
+          websiteVideoEpisodesSection(),
+          const SizedBox(height: 28),
           tiktokVideosSection(),
         ],
       ),
+    );
+  }
+
+  Widget websitePodcastAudioSection() {
+    final title = language == 'fr'
+        ? 'Audio podcast du site'
+        : language == 'en'
+            ? 'Website podcast audio'
+            : 'Audio ya podcast kutoka website';
+    final subtitle = language == 'fr'
+        ? 'Écoutez le podcast Love Time directement dans l’application.'
+        : language == 'en'
+            ? 'Listen to the Love Time Podcast directly inside the app.'
+            : 'Sikiliza Love Time Podcast moja kwa moja ndani ya app.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        sectionTitle(title, subtitle: subtitle),
+        Container(
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: rose.withValues(alpha: 0.12)),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(14),
+            leading: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: rose.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(Icons.graphic_eq, color: rose, size: 30),
+            ),
+            title: const Text('Love Time - Zipo Tofauti', style: TextStyle(color: cream, fontWeight: FontWeight.w700)),
+            subtitle: const Text('Love Time Podcast Show • 01:41', style: TextStyle(color: muted)),
+            trailing: const Icon(Icons.play_circle_fill, color: rose, size: 38),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => WebsiteAudioPlayerScreen(
+                  title: 'Love Time - Zipo Tofauti',
+                  url: websitePodcastAudioUrl,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget websiteVideoEpisodesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        sectionTitle(
+          language == 'fr'
+              ? 'Vidéo podcast du site'
+              : language == 'en'
+                  ? 'Website podcast videos'
+                  : 'Video za podcast kutoka website',
+          subtitle: language == 'fr'
+              ? 'Les épisodes vidéo publiés sur LoveTime Podcast.'
+              : language == 'en'
+                  ? 'The video episodes published on LoveTime Podcast.'
+                  : 'Vipindi vya video vilivyo kwenye LoveTime Podcast.',
+        ),
+        ...websiteVideoEpisodes.map((episode) {
+          final videoId = episode['id']!;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
+                  width: 86,
+                  height: 58,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              title: Text(episode['title']!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: cream, fontSize: 14, fontWeight: FontWeight.w700)),
+              subtitle: Text(episode['category']!, style: const TextStyle(color: rose, fontSize: 11)),
+              trailing: const Icon(Icons.play_circle_fill, color: rose),
+              onTap: () => openInAppMedia(
+                episode['title']!,
+                'https://www.youtube.com/embed/$videoId?autoplay=1&playsinline=1&enablejsapi=1&origin=https://lovetimepodcast.netlify.app&widget_referrer=https://lovetimepodcast.netlify.app',
+                narration: episode['title'],
+                narrationTranslations: {
+                  'sw': episode['title']!,
+                  'en': episode['title']!,
+                  'fr': episode['title']!,
+                },
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 
@@ -2055,6 +2187,161 @@ class AudioPlaylistScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class WebsiteAudioPlayerScreen extends StatefulWidget {
+  final String title;
+  final String url;
+
+  const WebsiteAudioPlayerScreen({
+    super.key,
+    required this.title,
+    required this.url,
+  });
+
+  @override
+  State<WebsiteAudioPlayerScreen> createState() => _WebsiteAudioPlayerScreenState();
+}
+
+class _WebsiteAudioPlayerScreenState extends State<WebsiteAudioPlayerScreen> {
+  final AudioPlayer player = AudioPlayer();
+  Duration position = Duration.zero;
+  Duration duration = Duration.zero;
+  bool isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    player.onDurationChanged.listen((value) {
+      if (mounted) {
+        setState(() => duration = value);
+      }
+    });
+    player.onPositionChanged.listen((value) {
+      if (mounted) {
+        setState(() => position = value);
+      }
+    });
+    player.onPlayerComplete.listen((_) {
+      if (mounted) {
+        setState(() {
+          isPlaying = false;
+          position = Duration.zero;
+        });
+      }
+    });
+    player.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() => isPlaying = state == PlayerState.playing);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    player.dispose();
+    super.dispose();
+  }
+
+  Future<void> togglePlayback() async {
+    if (isPlaying) {
+      await player.pause();
+      return;
+    }
+    await player.play(UrlSource(widget.url));
+  }
+
+  String formatTime(Duration value) {
+    final minutes = value.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  Future<void> seekBy(int seconds) async {
+    final target = position + Duration(seconds: seconds);
+    final safeTarget = Duration(
+      milliseconds: target.inMilliseconds.clamp(0, duration.inMilliseconds).toInt(),
+    );
+    await player.seek(safeTarget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final maxMilliseconds = duration.inMilliseconds > 0 ? duration.inMilliseconds.toDouble() : 1.0;
+    final currentMilliseconds = position.inMilliseconds.clamp(0, duration.inMilliseconds).toDouble();
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        backgroundColor: backgroundColor,
+        foregroundColor: cream,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxWidth: 520),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: rose.withValues(alpha: 0.18)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: rose.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.graphic_eq, color: rose, size: 64),
+                ),
+                const SizedBox(height: 22),
+                Text(widget.title, textAlign: TextAlign.center, style: const TextStyle(color: cream, fontFamily: 'PlayfairDisplay', fontSize: 22, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 7),
+                const Text('Love Time Podcast Show', style: TextStyle(color: muted)),
+                const SizedBox(height: 24),
+                Slider(
+                  value: currentMilliseconds.clamp(0, maxMilliseconds),
+                  max: maxMilliseconds,
+                  activeColor: rose,
+                  inactiveColor: Colors.white24,
+                  onChanged: (value) => player.seek(Duration(milliseconds: value.toInt())),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(formatTime(position), style: const TextStyle(color: muted, fontSize: 12)),
+                    Text(formatTime(duration), style: const TextStyle(color: muted, fontSize: 12)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(onPressed: () => seekBy(-15), tooltip: 'Rudi sekunde 15', icon: const Icon(Icons.replay_10, color: muted, size: 32)),
+                    const SizedBox(width: 12),
+                    FilledButton(
+                      onPressed: togglePlayback,
+                      style: FilledButton.styleFrom(backgroundColor: rose, minimumSize: const Size(64, 64), shape: const CircleBorder()),
+                      child: Icon(isPlaying ? Icons.pause : Icons.play_arrow, size: 34),
+                    ),
+                    const SizedBox(width: 12),
+                    IconButton(onPressed: () => seekBy(15), tooltip: 'Songa sekunde 15', icon: const Icon(Icons.forward_10, color: muted, size: 32)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
