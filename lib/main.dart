@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'youtube_service.dart';
 void main() {
   runApp(const LoveTimeApp());
 }
@@ -188,7 +188,36 @@ class _MainScreenState extends State<MainScreen> {
         return value;
     }
   }
+  List<YoutubeVideo> youtubeVideos = [];
+  bool loadingYoutube = true;
+  String? youtubeError;
 
+  @override
+  void initState() {
+    super.initState();
+    loadYoutubeVideos();
+  }
+
+  Future<void> loadYoutubeVideos() async {
+    try {
+      final videos = await YoutubeService.fetchVideos();
+
+      if (!mounted) return;
+
+      setState(() {
+        youtubeVideos = videos;
+        loadingYoutube = false;
+        youtubeError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loadingYoutube = false;
+        youtubeError = e.toString();
+      });
+    }
+  }
   @override
   void dispose() {
     searchController.dispose();
@@ -516,12 +545,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  
   Widget youtubePage() {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         pageHeader(tr('youtubeTitle')),
         const SizedBox(height: 20),
+
         Container(
           padding: const EdgeInsets.all(25),
           decoration: BoxDecoration(
@@ -539,7 +570,10 @@ class _MainScreenState extends State<MainScreen> {
               Text(
                 tr('youtubeDescription'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: mutedText, fontSize: 15),
+                style: const TextStyle(
+                  color: mutedText,
+                  fontSize: 15,
+                ),
               ),
               const SizedBox(height: 20),
               FilledButton.icon(
@@ -558,9 +592,169 @@ class _MainScreenState extends State<MainScreen> {
             ],
           ),
         ),
+
+        const SizedBox(height: 28),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Video za hivi karibuni',
+              style: TextStyle(
+                color: cream,
+                fontSize: 19,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            IconButton(
+              onPressed: loadYoutubeVideos,
+              icon: const Icon(
+                Icons.refresh,
+                color: softPink,
+              ),
+              tooltip: 'Refresh videos',
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        if (loadingYoutube)
+          const Padding(
+            padding: EdgeInsets.all(30),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: softPink,
+              ),
+            ),
+          ),
+
+        if (!loadingYoutube && youtubeError != null)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.wifi_off,
+                  color: softPink,
+                  size: 40,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Imeshindikana kupakia video. Tafadhali jaribu tena.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: cream),
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: loadYoutubeVideos,
+                  child: const Text('Jaribu tena'),
+                ),
+              ],
+            ),
+          ),
+
+        if (!loadingYoutube &&
+            youtubeError == null &&
+            youtubeVideos.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text(
+              'Hakuna video zilizopatikana kwa sasa.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: mutedText),
+            ),
+          ),
+
+        ...youtubeVideos.map((video) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 18),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () async {
+                await launchUrl(
+                  Uri.parse(video.url),
+                  mode: LaunchMode.externalApplication,
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Image.network(
+                      video.thumbnail,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: burgundy,
+                          child: const Icon(
+                            Icons.play_circle_fill,
+                            color: cream,
+                            size: 65,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          video.title,
+                          style: const TextStyle(
+                            color: cream,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.play_circle_outline,
+                              color: softPink,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'LoveTime Podcast',
+                              style: TextStyle(
+                                color: mutedText,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const Spacer(),
+                            const Icon(
+                              Icons.open_in_new,
+                              color: softPink,
+                              size: 18,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
       ],
     );
   }
+
 
   Widget favoritesPage() {
     final favoriteEpisodes = episodes
